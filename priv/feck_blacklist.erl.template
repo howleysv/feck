@@ -1,0 +1,3 @@
+-module( feck_blacklist ).
+-author( "Shane Howley <howleysv@gmail.com>" ).
+

@@ -14,15 +14,15 @@ main( [] ) ->
 	write_output( ?DEST_PATH, ?TARGET_FILE, Dictionaries ).
 
 read_dict( Path ) ->
-	{ ok, OpenFile } = file:open( Path, [ read ] ),
+	{ ok, OpenFile } = file:open( Path, [ read, binary ] ),
 	Words = read_lines( OpenFile, [] ),
 	file:close( OpenFile ),
 	Words.
 
 read_lines( OpenFile, Lines ) ->
 	case io:get_line( OpenFile, "" ) of
-		eof ->	lists:usort( Lines ) -- [[]];
-		Line ->	read_lines( OpenFile, [ string:strip( string:strip( Line, right, $\n ), both, $\" ) | Lines ] )
+		eof ->	lists:usort( Lines ) -- [<<>>];
+		Line ->	read_lines( OpenFile, [ re:replace( Line, <<"\"?(.*?)\"?\n">>, <<"\\1">>, [ unicode, { return, binary } ] ) | Lines ] )
 	end.
 
 write_output( DestPath, FileName, Dictionaries ) ->
@@ -41,4 +41,8 @@ generate_export( [ First | Atoms ] ) ->
 	].
 
 generate_function( { Name, Words } ) ->
-	io_lib:format( "~w() ->~n\t~w.~n~n", [ Name, Words ] ).
+	[
+		io_lib:format( "~w() ->~n\t[~n\t\t", [ Name ] ),
+		string:join( [ io_lib:format( "<<\"~ts\"/utf8>>", [ W ] ) || W <- Words ], ",\n\t\t" ),
+		"\n\t].\n\n"
+	].

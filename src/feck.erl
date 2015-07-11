@@ -1,7 +1,7 @@
 -module( feck ).
 -author( "Shane Howley <howleysv@gmail.com>" ).
 
--export( [ sanitize/2 ] ).
+-export( [ configure/1, configure/2, profane/2, profanities/2, sanitize/2 ] ).
 
 -export_type( [ replacement/0, option/0, config/0 ] ).
 
@@ -20,8 +20,32 @@
 
 -opaque config()	:: feck_config:config().
 
--spec sanitize	( unicode:charlist(), feck_config:config() ) -> unicode:charlist();
-		( unicode:unicode_binary(), feck_config:config() ) -> unicode:unicode_binary().
+-spec configure( [ option() ] ) -> config().
+configure( Options ) ->
+	feck_config:new( Options ).
+
+-spec configure( [ option() ], config() ) -> config().
+configure( Options, Config ) ->
+	feck_config:update( Options, Config ).
+
+-spec profane( unicode:chardata(), config() ) -> boolean().
+profane( String, Config ) ->
+	match =:= re:run( String, feck_config:regex( Config ), [ { capture, none } ] ).
+
+-spec profanities	( unicode:charlist(), config() ) -> [ unicode:charlist() ];
+			( unicode:unicode_binary(), config() ) -> [ unicode:unicode_binary() ].
+profanities( String, Config ) ->
+	Matches = case re:run( String, feck_config:regex( Config ), [ global, { capture, first, binary } ] ) of
+		{ match, List } ->	List;
+		_ ->			[]
+	end,
+	case is_binary( String ) of
+		true ->		[ unicode:characters_to_binary( M ) || M <- Matches ];
+		false ->	[ unicode:characters_to_list( M ) || M <- Matches ]
+	end.
+
+-spec sanitize	( unicode:charlist(), config() ) -> unicode:charlist();
+		( unicode:unicode_binary(), config() ) -> unicode:unicode_binary().
 sanitize( String, Config ) ->
 	Replaced = do_replace( re:split( String, feck_config:regex( Config ) ), [], feck_config:replacement( Config ) ),
 	case is_binary( String ) of
@@ -35,4 +59,3 @@ do_replace( [ NoReplace ], Processed, _ ) ->
 
 do_replace( [ NoReplace, Replace | Rest ], Processed, ReplacementType ) ->
 	do_replace( Rest, [ feck_replace:replace( Replace, ReplacementType ), NoReplace | Processed ], ReplacementType ).
-

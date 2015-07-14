@@ -1,4 +1,4 @@
-.PHONY: all app tests clean distclean check_plt build_plt dialyzer
+.PHONY: all app test clean distclean check_plt build_plt dialyzer
 
 all: app
 

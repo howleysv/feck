@@ -9,7 +9,7 @@
 			|  stars
 			|  vowels
 			|  nonconsonants
-			|  string
+			|  unicode:chardata()
 			|  { repeat, char() }
 			|  keep_first_letter
 			|  { keep_first_letter, char() }.

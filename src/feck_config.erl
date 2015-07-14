@@ -1,7 +1,7 @@
 -module( feck_config ).
 -author( "Shane Howley <howleysv@gmail.com>" ).
 
--export( [ new/1, update/2, replacement/1, regex/1 ] ).
+-export( [ new/1, update/2, blacklist/1, whitelist/1, replacement/1, regex/1 ] ).
 
 -export_type( [ config/0 ] ).
 
@@ -23,6 +23,14 @@ new( Options ) ->
 -spec update( [ feck:option() ], config() ) -> config().
 update( Options, Config ) ->
 	update( lists:foldl( fun( O, C ) -> update_config( O, C ) end, Config, Options ) ).
+
+-spec blacklist( config() ) -> [ unicode:chardata() ].
+blacklist( #?STATE{ blacklist = Blacklist } ) ->
+	Blacklist.
+
+-spec whitelist( config() ) -> [ unicode:chardata() ].
+whitelist( #?STATE{ whitelist = Whitelist } ) ->
+	Whitelist.
 
 -spec replacement( config() ) -> feck:replacement().
 replacement( #?STATE{ replacement = Replacement } ) ->

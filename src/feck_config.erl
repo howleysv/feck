@@ -55,7 +55,7 @@ update( #?STATE{ blacklist = Blacklist, whitelist = Whitelist } = Config ) ->
 compile_regex( WordList ) ->
 	Escaped = [ escape( W ) || W <- WordList ],
 	Regex = build_regex( Escaped ),
-	{ ok, Compiled } = re:compile( Regex, [ unicode, caseless, ucp ] ),
+	{ ok, Compiled } = re:compile( Regex, [ unicode, caseless ] ),
 	Compiled.
 
 -spec escape( unicode:chardata() ) -> unicode:chardata().

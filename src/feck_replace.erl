@@ -3,11 +3,40 @@
 
 -export( [ replace/2 ] ).
 
--spec replace( unicode:chardata(), stars ) -> unicode:chardata().
+-spec replace( unicode:chardata(), feck:replacement() ) -> unicode:chardata().
+replace( _String, garbled ) ->
+	list_shuffle( "$@!#%" );
+
 replace( String, stars ) ->
-	lists:duplicate( char_length( String ), $* ).
+	replace( String, { repeat, $* } );
+
+replace( String, vowels ) ->
+	replace_regex( String, <<"[aeiou]">> );
+
+replace( String, nonconsonants ) ->
+	replace_regex( String, <<"[^bcdfghjklmnpqrstvwxyz]">> );
+
+replace( String, { repeat, Char } ) ->
+	lists:duplicate( char_length( String ), Char );
+
+replace( String, keep_first_letter ) ->
+	replace( String, { keep_first_letter, $* } );
+
+replace( String, { keep_first_letter, Char } ) ->
+	[ First | Rest ] = unicode:characters_to_list( String ),
+	[ First | replace( Rest, { repeat, Char } ) ];
+
+replace( _String, Replacement ) ->
+	Replacement.
+
+-spec replace_regex( unicode:chardata(), unicode:chardata() ) -> unicode:chardata().
+replace_regex( String, Regex ) ->
+	re:replace( String, Regex, <<"*">>, [ unicode, caseless, global ] ).
 
 -spec char_length( unicode:chardata() ) -> non_neg_integer().
 char_length( String ) ->
 	length( unicode:characters_to_list( String ) ).
 
+-spec list_shuffle( [ term() ] ) -> [ term() ].
+list_shuffle( List ) ->
+	element( 2, lists:unzip( lists:sort( [ { random:uniform(), Element } || Element <- List ] ) ) ).

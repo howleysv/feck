@@ -55,16 +55,17 @@ update( #?STATE{ blacklist = Blacklist, whitelist = Whitelist } = Config ) ->
 compile_regex( WordList ) ->
 	Escaped = [ escape( W ) || W <- WordList ],
 	Regex = build_regex( Escaped ),
-	{ ok, Compiled } = re:compile( Regex, [ unicode, caseless ] ),
+	{ ok, Compiled } = re:compile( Regex, [ unicode, caseless, ucp ] ),
 	Compiled.
 
 -spec escape( unicode:chardata() ) -> unicode:chardata().
 escape( Word ) ->
 	re:replace( Word, <<"[.^$*+?()[{\\\|\s#]">>, <<"\\\\&">>, [ unicode, global ] ).
 
--spec build_regex( [ unicode:chardata(),... ] ) -> unicode:chardata().
-build_regex( [ First | Words ] ) -> 		build_regex( Words, [ First, "\\b(" ] ).
+-spec build_regex( [ unicode:chardata() ] ) -> unicode:chardata().
+build_regex( [] ) ->				<<"$.">>;
+build_regex( [ First | Words ] ) -> 		build_regex( Words, [ First, <<"\\b(">> ] ).
 
 -spec build_regex( [ unicode:chardata() ], [ unicode:chardata(),... ] ) -> unicode:chardata().
-build_regex( [], Regex ) -> 			lists:reverse( [ ")\\b" | Regex ] );
-build_regex( [ Word | Rest ], Regex ) ->	build_regex( Rest, [ Word, "|" | Regex ] ).
+build_regex( [], Regex ) -> 			lists:reverse( [ <<")\\b">> | Regex ] );
+build_regex( [ Word | Rest ], Regex ) ->	build_regex( Rest, [ Word, <<"|">> | Regex ] ).

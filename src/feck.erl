@@ -47,7 +47,8 @@ profanities( String, Config ) ->
 -spec sanitize	( unicode:charlist(), config() ) -> unicode:charlist();
 		( unicode:unicode_binary(), config() ) -> unicode:unicode_binary().
 sanitize( String, Config ) ->
-	Replaced = do_replace( re:split( String, feck_config:regex( Config ) ), [], feck_config:replacement( Config ) ),
+	Binary = unicode:characters_to_binary( String ), %% Pre-convert to binary to workaround bug in re:split with precompiled regex
+	Replaced = do_replace( re:split( Binary, feck_config:regex( Config ) ), [], feck_config:replacement( Config ) ),
 	case is_binary( String ) of
 		true ->		unicode:characters_to_binary( Replaced );
 		false ->	unicode:characters_to_list( Replaced )

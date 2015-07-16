@@ -83,6 +83,14 @@ feck:profanities( "ceci n'est pas une pipe", Config )
 
 ## Known Limitations
 
+### Unicode support in Erlang R16 and below
+
+Erlang 17 introduced the `ucp` option to the `re` module:
+>ucp
+>Specifies that Unicode Character Properties should be used when resolving \B, \b, \D, \d, \S, \s, \W and \w. Without this flag, only ISO-Latin-1 properties are used. Using Unicode properties hurts performance, but is semantically correct when working with Unicode characters beyond the ISO-Latin-1 range.
+
+Without this option (R16 and below), finding word boundaries will fail for words containing characters with codepoints outside the Latin-1 range.
+
 ### I18n concerns
 
 A couple of replacement strategies (`vowels` and `nonconsonants`) are currently limited to the english language.

@@ -1,5 +1,6 @@
 -module( feck_config ).
 -author( "Shane Howley <howleysv@gmail.com>" ).
+-include( "feck.hrl" ).
 
 -export( [ new/1, update/2, blacklist/1, whitelist/1, replacement/1, regex/1 ] ).
 
@@ -55,12 +56,12 @@ update( #?STATE{ blacklist = Blacklist, whitelist = Whitelist } = Config ) ->
 compile_regex( WordList ) ->
 	Escaped = [ escape( W ) || W <- WordList ],
 	Regex = build_regex( Escaped ),
-	{ ok, Compiled } = re:compile( Regex, [ unicode, caseless ] ),
+	{ ok, Compiled } = re:compile( Regex, ?REGEX_UNICODE_OPTIONS ++ [ caseless ] ),
 	Compiled.
 
 -spec escape( unicode:chardata() ) -> unicode:chardata().
 escape( Word ) ->
-	re:replace( Word, <<"[.^$*+?()[{\\\|\s#]">>, <<"\\\\&">>, [ unicode, global ] ).
+	re:replace( Word, <<"[.^$*+?()[{\\\|\s#]">>, <<"\\\\&">>, ?REGEX_UNICODE_OPTIONS ++ [ global ] ).
 
 -spec build_regex( [ unicode:chardata() ] ) -> unicode:chardata().
 build_regex( [] ) ->				<<"$.">>;

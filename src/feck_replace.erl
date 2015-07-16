@@ -1,5 +1,6 @@
 -module( feck_replace ).
 -author( "Shane Howley <howleysv@gmail.com>" ).
+-include( "feck.hrl" ).
 
 -export( [ replace/2 ] ).
 
@@ -31,7 +32,7 @@ replace( _String, Replacement ) ->
 
 -spec replace_regex( unicode:chardata(), unicode:chardata() ) -> unicode:chardata().
 replace_regex( String, Regex ) ->
-	re:replace( String, Regex, <<"*">>, [ unicode, caseless, global ] ).
+	re:replace( String, Regex, <<"*">>, ?REGEX_UNICODE_OPTIONS ++ [ caseless, global ] ).
 
 -spec char_length( unicode:chardata() ) -> non_neg_integer().
 char_length( String ) ->

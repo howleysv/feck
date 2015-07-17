@@ -114,14 +114,13 @@ feck:profanities( "this is superbadly!", AnyConfig )
 The config parameter can be omitted from `profane/2`, `profanities/2` & `sanitize/2` in order to use the application-level default settings. These settings are read once, the first time the default config is used, after which the compiled config is cached as an environmental variable. The default options can be overridden via your sys.config:
 
 ```erlang
-{   feck,
-	{ options,
+{	feck,
 	[
 		{ blacklist, english },
 		{ whitelist, [] },
 		{ replacement, stars },
 		{ match, word_boundaries }
-	] }
+	]
 }
 ```
 

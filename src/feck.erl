@@ -46,10 +46,8 @@ default_config() ->
 		{ ok, Config } ->
 			Config;
 		undefined ->
-			Options = case application:get_env( ?APP, options ) of
-				{ ok, O } ->	O;
-				undefined ->	[]
-			end,
+			AppSettings = [ { O, application:get_env( ?APP, O ) } || O <- [ blacklist, whitelist, replacement, match ] ],
+			Options = lists:filtermap( fun( { O, { ok, V } } ) -> { true, { O, V } }; ( _ ) -> false end, AppSettings ),
 			Config = configure( Options ),
 			set_default( Config ),
 			Config

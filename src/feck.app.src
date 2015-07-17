@@ -11,13 +11,10 @@
 		] },
 		{ env,
 		[
-			{ options,
-			[
-				{ blacklist, english },
-				{ whitelist, [] },
-				{ replacement, stars },
-				{ match, word_boundaries }
-			] }
+			{ blacklist, english },
+			{ whitelist, [] },
+			{ replacement, stars },
+			{ match, word_boundaries }
 		] }
 	]
 }.

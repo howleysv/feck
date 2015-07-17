@@ -15,7 +15,8 @@
 			[
 				{ blacklist, english },
 				{ whitelist, [] },
-				{ replacement, stars }
+				{ replacement, stars },
+				{ match, word_boundaries }
 			] }
 		] }
 	]

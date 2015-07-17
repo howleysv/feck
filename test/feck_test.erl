@@ -6,7 +6,10 @@
 -define( T( F ), { setup, fun setup/0, F } ).
 
 setup() ->
-	feck:configure( [ { blacklist, [ "very", "bad", "words" ] }, { whitelist, [ "words" ] }, { replacement, stars } ] ).
+	feck:configure( [	{ blacklist, [ "very", "bad", "words" ] },
+				{ whitelist, [ "words" ] },
+				{ replacement, stars },
+				{ match, word_boundaries } ] ).
 
 feck_test_() ->
 	[
@@ -16,6 +19,7 @@ feck_test_() ->
 		{ "words in a string", ?T( fun word_string/1 ) },
 		{ "bad words with whitespace in a string", ?T( fun blacklist_whitespace/1 ) },
 		{ "find expletives in a string", ?T( fun profanity_list/1 ) },
+		{ "find expletives as substrings of other words", ?T( fun word_boundaries/1 ) },
 		{ "replace expletives with stars", ?T( fun replace_stars/1 ) },
 		{ "replace expletives in binary string", ?T( fun replace_binary/1 ) },
 		{ "leaves input untouched when no profanities are found", ?T( fun return_original/1 ) },
@@ -26,14 +30,10 @@ feck_test_() ->
 		{ "replace expletives with a repeated custom character", ?T( fun replace_repeat/1 ) },
 		{ "replace expletives with stars, except the first letter", ?T( fun replace_keep_first/1 ) },
 		{ "replace expletives with the given character, except the first letter", ?T( fun replace_keep_first_char/1 ) },
+		{ "non-latin characters", ?T( fun sanitize_utf8/1 ) },
 		{ "empty blacklist", ?T( fun empty_blacklist/1 ) },
 		{ "empty blacklist because of whitelist", ?T( fun cancelled_out_blacklist/1 ) }
 	].
-
--ifndef( ucp_not_supported ).
-feck_utf8_test_() ->
-	[ 	{ "non-latin characters", ?T( fun sanitize_utf8/1 ) } ].
--endif.
 
 blacklist( Config ) ->
 	[
@@ -77,6 +77,14 @@ profanity_list( Config ) ->
 		?_assertEqual( [], feck:profanities( "none to be found", Config ) )
 	].
 
+word_boundaries( Config ) ->
+	Config2 = feck:configure( [ { match, any } ], Config ),
+	[
+		?_assertEqual( [], feck:profanities( "superbadly", Config ) ),
+		?_assertEqual( [ "bad" ], feck:profanities( "superbadly", Config2 ) ),
+		?_assertEqual( [], feck:profanities( "supergoodly", Config2 ) )
+	].
+
 replace_stars( Config ) ->
 	[ ?_assertEqual( "there are ***, **** *** words", feck:sanitize( "there are bad, VERY BAD words", Config ) ) ].
 
@@ -117,13 +125,19 @@ replace_keep_first_char( Config ) ->
 	[ ?_assertEqual( "there are b--, V--- B-- words", feck:sanitize( "there are bad, VERY BAD words", Config2 ) ) ].
 
 sanitize_utf8( _ ) ->
-	Config = feck:configure( [ { replacement, stars }, { blacklist, [ "тест" ] } ] ),
+	Config = utf8_test_config(),
 	String = "This is a тест",
 	[
 		?_assert( feck:profane( String, Config ) ),
 		?_assertEqual( [ "тест" ], feck:profanities( String, Config ) ),
 		?_assertEqual( "This is a ****", feck:sanitize( String, Config ) )
 	].
+
+-ifdef( ucp_not_supported ).
+utf8_test_config() ->	feck:configure( [ { replacement, stars }, { blacklist, [ "тест" ] }, { match, any } ] ).
+-else.
+utf8_test_config() ->	feck:configure( [ { replacement, stars }, { blacklist, [ "тест" ] } ] ).
+-endif.
 
 empty_blacklist( _ ) ->
 	Config = feck:configure( [ { blacklist, [] } ] ),

@@ -23,7 +23,8 @@
 
 -type option()		:: { blacklist, word_list() }
 			|  { whitelist, word_list() }
-			|  { replacement, feck:replacement() }.
+			|  { replacement, feck:replacement() }
+			|  { match, word_boundaries | any }.
 
 -type config()		:: feck_config:config().
 
@@ -38,6 +39,21 @@ configure( Options, Config ) ->
 -spec set_default( config() ) -> ok.
 set_default( Config ) ->
 	application:set_env( ?APP, default_config, Config ).
+
+-spec default_config() -> config().
+default_config() ->
+	case application:get_env( ?APP, default_config ) of
+		{ ok, Config } ->
+			Config;
+		undefined ->
+			Options = case application:get_env( ?APP, options ) of
+				{ ok, O } ->	O;
+				undefined ->	[]
+			end,
+			Config = configure( Options ),
+			set_default( Config ),
+			Config
+	end.
 
 -spec profane( unicode:chardata() ) -> boolean().
 profane( String ) ->
@@ -85,18 +101,3 @@ do_replace( [ NoReplace ], Processed, _ ) ->
 
 do_replace( [ NoReplace, Replace | Rest ], Processed, ReplacementType ) ->
 	do_replace( Rest, [ feck_replace:replace( Replace, ReplacementType ), NoReplace | Processed ], ReplacementType ).
-
--spec default_config() -> config().
-default_config() ->
-	case application:get_env( ?APP, default_config ) of
-		{ ok, Config } ->
-			Config;
-		undefined ->
-			Options = case application:get_env( ?APP, options ) of
-				{ ok, O } ->	O;
-				undefined ->	[]
-			end,
-			Config = configure( Options ),
-			set_default( Config ),
-			Config
-	end.

@@ -2,7 +2,7 @@
 -author( "Shane Howley <howleysv@gmail.com>" ).
 -include( "feck.hrl" ).
 
--export( [ new/1, update/2, blacklist/1, whitelist/1, replacement/1, regex/1 ] ).
+-export( [ new/1, update/2, blacklist/1, whitelist/1, replacement/1, match/1, regex/1 ] ).
 
 -export_type( [ config/0 ] ).
 
@@ -13,6 +13,7 @@
 -record( ?STATE, {	blacklist = []		:: [ unicode:chardata() ],
 			whitelist = []		:: [ unicode:chardata() ],
 			replacement = stars 	:: feck:replacement(),
+			match = word_boundaries	:: word_boundaries | any,
 			compiled_regex 		:: regex() } ).
 
 -opaque config() 	:: #?STATE{}.
@@ -37,6 +38,10 @@ whitelist( #?STATE{ whitelist = Whitelist } ) ->
 replacement( #?STATE{ replacement = Replacement } ) ->
 	Replacement.
 
+-spec match( config() ) -> word_boundaries | any.
+match( #?STATE{ match = Match } ) ->
+	Match.
+
 -spec regex( config() ) -> regex().
 regex( #?STATE{ compiled_regex = Regex } ) ->
 	Regex.
@@ -44,18 +49,19 @@ regex( #?STATE{ compiled_regex = Regex } ) ->
 -spec update_config( feck:option(), config() ) -> config().
 update_config( { blacklist, Blacklist }, Config ) ->		Config#?STATE{ blacklist = resolve_word_list( Blacklist ) };
 update_config( { whitelist, Whitelist }, Config ) ->		Config#?STATE{ whitelist = resolve_word_list( Whitelist ) };
-update_config( { replacement, Replacement }, Config ) ->	Config#?STATE{ replacement = Replacement }.
+update_config( { replacement, Replacement }, Config ) ->	Config#?STATE{ replacement = Replacement };
+update_config( { match, Match }, Config ) ->			Config#?STATE{ match = Match }.
 
 -spec update( config() ) -> config().
-update( #?STATE{ blacklist = Blacklist, whitelist = Whitelist } = Config ) ->
+update( #?STATE{ blacklist = Blacklist, whitelist = Whitelist, match = Match } = Config ) ->
 	Filtered = lists:usort( Blacklist ) -- lists:usort( Whitelist ),
-	Regex = compile_regex( Filtered ),
+	Regex = compile_regex( Filtered, Match ),
 	Config#?STATE{ compiled_regex = Regex }.
 
--spec compile_regex( [ unicode:chardata() ] ) -> regex().
-compile_regex( WordList ) ->
+-spec compile_regex( [ unicode:chardata() ], word_boundaries | any ) -> regex().
+compile_regex( WordList, Match ) ->
 	Escaped = [ escape( W ) || W <- WordList ],
-	Regex = build_regex( Escaped ),
+	Regex = build_regex( Escaped, Match ),
 	{ ok, Compiled } = re:compile( Regex, ?REGEX_UNICODE_OPTIONS ++ [ caseless ] ),
 	Compiled.
 
@@ -63,13 +69,15 @@ compile_regex( WordList ) ->
 escape( Word ) ->
 	re:replace( Word, <<"[.^$*+?()[{\\\|\s#]">>, <<"\\\\&">>, ?REGEX_UNICODE_OPTIONS ++ [ global ] ).
 
--spec build_regex( [ unicode:chardata() ] ) -> unicode:chardata().
-build_regex( [] ) ->				<<"$.">>;
-build_regex( [ First | Words ] ) -> 		build_regex( Words, [ First, <<"\\b(">> ] ).
+-spec build_regex( [ unicode:chardata() ], word_boundaries | any ) -> unicode:chardata().
+build_regex( [], _ ) ->				<<"$.">>;
+build_regex( Words, word_boundaries ) ->	[ <<"\\b">>, build_regex_capture( Words, [] ), <<"\\b">> ];
+build_regex( Words, any ) ->			build_regex_capture( Words, [] ).
 
--spec build_regex( [ unicode:chardata() ], [ unicode:chardata(),... ] ) -> unicode:chardata().
-build_regex( [], Regex ) -> 			lists:reverse( [ <<")\\b">> | Regex ] );
-build_regex( [ Word | Rest ], Regex ) ->	build_regex( Rest, [ Word, <<"|">> | Regex ] ).
+-spec build_regex_capture( [ unicode:chardata() ], [ unicode:chardata(),... ] ) -> unicode:chardata().
+build_regex_capture( [], Regex ) -> 			lists:reverse( [ <<")">> | Regex ] );
+build_regex_capture( [ Word | Rest ], [] ) ->		build_regex_capture( Rest, [ Word, <<"(">> ] );
+build_regex_capture( [ Word | Rest ], Regex ) ->	build_regex_capture( Rest, [ Word, <<"|">> | Regex ] ).
 
 -spec resolve_word_list( feck:word_list() ) -> [ unicode:chardata() ].
 resolve_word_list( List ) when is_list( List ) ->	List;

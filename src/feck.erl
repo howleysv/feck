@@ -18,7 +18,7 @@
 			|  { whitelist, [ unicode:chardata() ] }
 			|  { replacement, feck:replacement() }.
 
--opaque config()	:: feck_config:config().
+-type config()		:: feck_config:config().
 
 -spec configure( [ option() ] ) -> config().
 configure( Options ) ->

@@ -3,17 +3,20 @@
 	[
 		{ description, "Profanity filter library for Erlang" },
 		{ vsn, "0.1.0" },
-		{ modules,
-		[
-			feck,
-			feck_blacklist
-		] },
 		{ registered, [] },
 		{ applications,
 		[
 			kernel,
 			stdlib
 		] },
-		{ env, [] }
+		{ env,
+		[
+			{ options,
+			[
+				{ blacklist, [] },
+				{ whitelist, [] },
+				{ replacement, garbled }
+			] }
+		] }
 	]
 }.

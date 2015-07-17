@@ -1,9 +1,12 @@
 -module( feck ).
 -author( "Shane Howley <howleysv@gmail.com>" ).
 
--export( [ configure/1, configure/2, profane/2, profanities/2, sanitize/2 ] ).
+-export( [ 	configure/1, configure/2, set_default/1, default_config/0,
+		profane/1, profane/2, profanities/1, profanities/2, sanitize/1, sanitize/2 ] ).
 
 -export_type( [ replacement/0, option/0, config/0 ] ).
+
+-define( APP, ?MODULE ).
 
 -type replacement()	:: garbled
 			|  stars
@@ -28,9 +31,22 @@ configure( Options ) ->
 configure( Options, Config ) ->
 	feck_config:update( Options, Config ).
 
+-spec set_default( config() ) -> ok.
+set_default( Config ) ->
+	application:set_env( ?APP, default_config, Config ).
+
+-spec profane( unicode:chardata() ) -> boolean().
+profane( String ) ->
+	profane( String, default_config() ).
+
 -spec profane( unicode:chardata(), config() ) -> boolean().
 profane( String, Config ) ->
 	match =:= re:run( String, feck_config:regex( Config ), [ { capture, none } ] ).
+
+-spec profanities	( unicode:charlist() ) -> [ unicode:charlist() ];
+			( unicode:unicode_binary() ) -> [ unicode:unicode_binary() ].
+profanities( String ) ->
+	profanities( String, default_config() ).
 
 -spec profanities	( unicode:charlist(), config() ) -> [ unicode:charlist() ];
 			( unicode:unicode_binary(), config() ) -> [ unicode:unicode_binary() ].
@@ -43,6 +59,11 @@ profanities( String, Config ) ->
 		true ->		[ unicode:characters_to_binary( M ) || M <- Matches ];
 		false ->	[ unicode:characters_to_list( M ) || M <- Matches ]
 	end.
+
+-spec sanitize	( unicode:charlist() ) -> unicode:charlist();
+		( unicode:unicode_binary() ) -> unicode:unicode_binary().
+sanitize( String ) ->
+	sanitize( String, default_config() ).
 
 -spec sanitize	( unicode:charlist(), config() ) -> unicode:charlist();
 		( unicode:unicode_binary(), config() ) -> unicode:unicode_binary().
@@ -60,3 +81,18 @@ do_replace( [ NoReplace ], Processed, _ ) ->
 
 do_replace( [ NoReplace, Replace | Rest ], Processed, ReplacementType ) ->
 	do_replace( Rest, [ feck_replace:replace( Replace, ReplacementType ), NoReplace | Processed ], ReplacementType ).
+
+-spec default_config() -> config().
+default_config() ->
+	case application:get_env( ?APP, default_config ) of
+		{ ok, Config } ->
+			Config;
+		undefined ->
+			Options = case application:get_env( ?APP, options ) of
+				{ ok, O } ->	O;
+				undefined ->	[]
+			end,
+			Config = configure( Options ),
+			set_default( Config ),
+			Config
+	end.

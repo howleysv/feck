@@ -4,7 +4,7 @@
 -export( [ 	configure/1, configure/2, set_default/1, default_config/0,
 		profane/1, profane/2, profanities/1, profanities/2, sanitize/1, sanitize/2 ] ).
 
--export_type( [ replacement/0, option/0, config/0 ] ).
+-export_type( [ replacement/0, option/0, config/0, word_list/0 ] ).
 
 -define( APP, ?MODULE ).
 
@@ -17,8 +17,12 @@
 			|  keep_first_letter
 			|  { keep_first_letter, char() }.
 
--type option()		:: { blacklist, [ unicode:chardata() ] }
-			|  { whitelist, [ unicode:chardata() ] }
+-type word_list()	:: [ unicode:chardata() ]
+			|  atom()
+			|  { M :: module(), F :: atom(), A ::[ term() ] }.
+
+-type option()		:: { blacklist, word_list() }
+			|  { whitelist, word_list() }
 			|  { replacement, feck:replacement() }.
 
 -type config()		:: feck_config:config().

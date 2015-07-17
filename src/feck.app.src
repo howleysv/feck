@@ -13,9 +13,9 @@
 		[
 			{ options,
 			[
-				{ blacklist, [] },
+				{ blacklist, english },
 				{ whitelist, [] },
-				{ replacement, garbled }
+				{ replacement, stars }
 			] }
 		] }
 	]

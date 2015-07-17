@@ -42,8 +42,8 @@ regex( #?STATE{ compiled_regex = Regex } ) ->
 	Regex.
 
 -spec update_config( feck:option(), config() ) -> config().
-update_config( { blacklist, Blacklist }, Config ) ->		Config#?STATE{ blacklist = Blacklist };
-update_config( { whitelist, Whitelist }, Config ) ->		Config#?STATE{ whitelist = Whitelist };
+update_config( { blacklist, Blacklist }, Config ) ->		Config#?STATE{ blacklist = resolve_word_list( Blacklist ) };
+update_config( { whitelist, Whitelist }, Config ) ->		Config#?STATE{ whitelist = resolve_word_list( Whitelist ) };
 update_config( { replacement, Replacement }, Config ) ->	Config#?STATE{ replacement = Replacement }.
 
 -spec update( config() ) -> config().
@@ -70,3 +70,8 @@ build_regex( [ First | Words ] ) -> 		build_regex( Words, [ First, <<"\\b(">> ] 
 -spec build_regex( [ unicode:chardata() ], [ unicode:chardata(),... ] ) -> unicode:chardata().
 build_regex( [], Regex ) -> 			lists:reverse( [ <<")\\b">> | Regex ] );
 build_regex( [ Word | Rest ], Regex ) ->	build_regex( Rest, [ Word, <<"|">> | Regex ] ).
+
+-spec resolve_word_list( feck:word_list() ) -> [ unicode:chardata() ].
+resolve_word_list( List ) when is_list( List ) ->	List;
+resolve_word_list( FunName ) when is_atom( FunName ) ->	feck_blacklist:FunName();
+resolve_word_list( { M, F, A } ) ->			apply( M, F, A ).
